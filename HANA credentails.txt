@@ -1,0 +1,788 @@
+Hana archticture:
+Name server : The name server, which runs in the system database, owns the information about the topology of the SAP HANA system, 
+              including knowledge of the tenant databases that exist in the system.
+Index server : The index server, which runs in every tenant database, contains the actual data stores and the engines for processing the data.
+                Index Server processes incoming SQL or MDX statement.
+
+HDB Deployment Infrastructure Server    : HDI handles the deployment of design-time artifacts into the SAP HANA database.
+
+XS classic server : The XS classic server can run as a separate server process or embedded within the index server.
+ diserver           SAP HANA database and allows developers to write and run SAP HANA-based applications without the need to run an additional application server. 
+                     SAP HANA XS is also used to run web-based tools that come with SAP HANA, for instance for administration, lifecycle management and development.
+
+
+esserver : Hana dynamic tier -uasge of warm data
+
+dpserver : data provisiong server -- data provisioning server is part of the SAP HANA smart data integration option for SAP HANA.
+            It provides capabilities such as data provisioning in real time and batch mode, real-time data transformations,
+
+
+Preprocessor server : The preprocessor server is used by the index server to analyze text data and extract the information on which the text search capabilities are based. It runs in the system database and serves all tenant databases.
+
+Compile server : The compile server performs the compilation of stored procedures and programs, for example, SQLScript procedures. It runs on every host and does not persist data. It runs in the system database and serves all tenant databases.
+
+Script server: The script server is used to execute application function libraries written in C++. The script server is optional and must be started manually in the database that requires it.
+
+SAP Web Dispatcher : The Web Dispatcher processes inbound HTTP and HTTPS connections to XS classic services.
+
+SAP start service : The SAP start service is responsible for starting and stopping the other services in the correct order. It also performs other functions, such as monitoring their runtime state.
+
+xscontroller : The Controller is the central management component of SAP HANA XS advanced
+               it has a view on all deployed and/or running applications, and persists configuration and status information in the database.
+
+
+xsexecagent:  The Execution Agent is responsible for managing processes, that is starting, keeping alive, and stopping tasks.
+
+hdixsuaaserver : The UAA service manages user logon and logoff requests in SAP HANA XS advanced.
+
+demon service: The daemon service is the process responsible for starting all HANA core process. 
+
+
+PORTS:
+System database: 3xx13 (SQL port)
+Tenet DB : 3xx15    Tenant databases: 3xx41−3xx98 
+
+
+XSA: hostname routing - 3xx33
+     Port routing - all public ports of the platform router are exposed: 51000 – 51500, 3xx30, and 3xx32.
+
+HANA cockpit : 51*** ports used
+
+XS clasic: 80xx/43xx  (SAP HANA XS, classic is deprecated as of SAP HANA 2.0 SPS 02)
+
+SAP HANA studio : 1128 or 1129 (SSL)
+                : (ODBC/JDBC) 5xx13, 5xx14 (SSL)
+
+SAP support :  3xx09   Internal SAP protocol
+
+Replication systems for external data sources : SLT,DS, -- (ODBC/JDBC) 
+System database: 3xx13 (SQL port)
+Tenet DB : 3xx15    Tenant databases: 3xx41−3xx98 
+
+
+daemon - 3nn00
+nameserver -3nn01
+preprocesser - 3nn02
+index server - 3nn03
+webdispatcher - 3nn06
+xsengine - 3nn07
+compileserver - 3nn10
+
+
+System DB:
+daemon
+nameserver
+preprocesser
+sapstartsrv
+webdispatcher
+compileserver
+
+
+Tenet DB
+all systemDB services 
+index server
+xs engine
+
+Backup configuration:
+
+
+file or third paty(backinst) (/usr/sap/HXE/SYS/global/hdb/backint)
+
+catalog_backup_using_backint
+true = backint
+false = file system
+
+log_backup_using_backint
+true = backint
+false = file system
+
+basepath_databacup
+basepath_logpath
+basepath_catalogbackup  (which will restrict the logs in default location)
+
+log mode:
+
+SAP HANA can run either in log mode normal or overwrite.
+After installation, SAP HANA temporarily runs in log mode overwrite.
+
+global.ini--persistance--log-mode -by default enabled
+normal - enabled
+overwrite - disabled (never diasble )
+
+To prvent backup overwrite: enable_data_backup_overwrite = false
+
+Hana componet addon : AFL 
+
+The AFL plug-ins with version 59.400, 59.401, 59.402, ... up to 59.499 would match SAP HANA revision 59.04.
+
+Our current version:  2.00.037.07.1595989006  revision : 37
+
+IMDB_AFL20_037P_700-80001894.SAR
+SAP HANA AFL Rev 37.700 only for HANA 2.0 Rev 37.07
+
+we have upgraded with resident hdblcm (component_dirs is the software location)
+
+./hdblcm --component_dirs=/hana/software/AFL-addon/SAP_HANA_AFL/
+
+
+https://192.168.13.128:1129/lmsl/HDBLCM/HAD/index.html
+
+
+
+
+
+
+
+
+
+VI replace command
+sed -i '/default_domain = 119.235.49.190/ c\default_domain = hxehost.localdomain\' /usr/sap/HXE/SYS/global/hdb/custom/config/xscontroller.ini
+
+sed -i '/api_url = https://119.235.49.190:39030/ c\api_url = https://hxehost.localdomain:39030\' /usr/sap/HXE/SYS/global/hdb/custom/config/xscontroller.ini
+
+Streaming client : XML/RPC  	3xx26
+api_url = https://hxehost.localdomain:39030
+
+192.168.0.107
+SYSTEM
+Vyshu1994
+
+192.168.0.108
+192.168.0.108 hxehost.localdomain hxehost
+
+HDB version
+top + 1(CPU)
+free -m
+df -hT  (file type)
+lsblk
+cat /etc/os-release
+rpm -qa | grep -i sap
+ip addr
+ip route
+hostname -f
+hostname -d
+/etc/resolv.conf (domain)
+timedatectl (to check time zone)
+timedatectl set-timezone Asia/Kolkata
+disk -- PVS (dev) --- Vgs (hana) ---lvs (data,log,shared)
+/etc/fstab
+ls -R /hana/data (it will show insde file systms(ls))
+ls -lhR /hana/data (it will show insde file systms(ll))
+ls -lR /hana/data(ll- size will give in GB)
+lscpu - to see the cpu and architecture
+echo "192.168.0.108 hxehost.localamdmin hxehost" >> /etc/hosts
+tail -5 /etc/hosts
+echo "192.168.0.107 hxehost.localamdmin hxehost" >> C:\Windows\System32\drivers\etc\hosts
+type C:\Windows\System32\drivers\etc\hosts
+
+pscp -p unrarsrc-6.2.12.tar.gz hxeadm@192.168.0.108:/usr/sap/HXE/software/hana_revision_upgrade_61_TO_67 (copy software from windows to linux)
+
+sapcontrol -nr 10 -function GetProcessList | column -t -s ","
+sapcontrol -nr 00 -function GetProcessList | column -t -s ","
+/usr/sap/hostctrl/exe/sapcontrol -nr <instance number> -function Start/stop (to use sapcontrol root authorization required)
+HDB stop|start|restart  (sidadm)
+
+hdblcm,hdblcmgui (reqyired root user)
+hdblcmweb(sidadm) 1128,1129 port open required.
+https://192.168.0.108:1129/lmsl/HDBLCM/HXE/index.html
+default_domain = 192.168.0.108
+api_url = https://192.168.0.108:39030
+http://192.168.0.108:8090
+
+
+Ports listnenig check: https://www.tecmint.com/find-listening-ports-linux/
+Source system checking:
+sudo netstat -ltup  - to check all the listning tcp/udp  ports
+sudo netstat -lntup | grep ":39013"
+sudo lsof -i :39030
+
+remote server checking:
+niping -c -H 192.168.0.108 -S 39013 
+
+
+
+
+
+
+egrep -i 'err|fail|warn' nameserver_history.trc
+
+SAPCAR -xvf filename -R (folder) -manifest SIGNATURE.SMF
+
+cdexe - excutable
+cdtrace - trace
+cdcoc - config
+
+
+Installation path:
+/hana/shared/data,log,HXE
+HXE -- exe - excutable of kernel programs (Hana installed version)
+       global -  globaly shared data  (
+       profiles - instance profile  (default,instance)
+       HDB90 - HDB excutables
+       hdblcm - hdblcm,hdblcmgui,hdblcmweb
+hdbclinet - hana client path
+hdbstudio
+hdbstudio_update
+federation
+sapdbctrl-config
+lm_structure
+xs
+global   /hana/shared/HDD/global/security/rsecssfs/data,key     (
+hdblcm
+
+/hana/shared/$SID/global/hdb/custom/config
+webdispatcher.ini
+xsengine.ini
+diserver.ini
+globalbackup.ini_backup
+indexserver.ini_back
+lexicon
+indexserver.ini
+global.ini
+nameserver.ini
+xscontroller.ini
+
+
+/hana/shared/$SID/global/hdb/custom/config/DB_HDD/xsengine.ini
+global.ini
+indexserver.ini
+scriptserver.ini
+
+
+Hana clinet path: /usr/sap/hdbclient
+
+system instance:
+/usr/sap/hostctrl – The SAP host agent directory.
+/usr/sap/<SID> – Contains system executables (SYS) ---profile -> /hana/shared/HDD/profile
+                                                      global -> /hana/shared/HDD/global
+                                                      exe----hdb-> /hana/shared/HDD/exe/linuxx86_64/hdb
+                 Instance --------------HDB00 -> /hana/shared/HDD/HDB00
+
+
+
+trace: /hana/shared/HDD/HDB00/atc-non-prod-hana/trace/backup.log,backint.log,hdbdaemon.status,daemon,xsinstancemanager,nameserver_topology,nameserver,nameserver_alert
+       /hana/shared/HDD/HDB00/atc-non-prod-hana/trace/DB-HDD/backup.log,backint.log,scriptserver,xsengine,indexserver
+cdtrace
+
+                 
+/hana/data/SID
+/hana/log/SID
+
+while true
+do
+ clear
+ sapcontrol -nr 90 -function GetProcessList | column -t -s ','  | sed "s/GREEN/$(printf '\090[1:32')GREEN$(printf '\090[0m')/g" "s/YELLOW/$(printf '\090[1:32')YELLOW$(printf '\090[0m')/g" "s/RED/$(printf '\090[1:32')RED$(printf '\090[0m')/g"
+ sleep 2
+done
+
+
+
+
+
+
+Platform edition or entrprise adtion
+data & log will be hana/data&log -- while installting need to mantian
+HDB stop & start logs
+
+
+XSA:
+XS login
+Vyshu1994
+
+to start XSA
+xs start messaging-service-hub
+xs start messaging-service-node
+xs start messaging-service-broker
+
+
+xs apps | grep webideb (to check XSA application run)
+
+xs apps | grep cockpit-admin-web-app (cockpit xhecking)
+xs apps | grep xsa-cockpit
+
+xs version
+
+
+
+https://192.168.0.108:39030/
+
+curl icanhazip.com (to know the public ip on linux)
+curl ifconfig.me
+curl ipinfo.io/ip
+
+
+
+SAP HANA persists in-memory data by using savepoints. Each SAP HANA service has its own separate savepoints. 
+During a savepoint operation, the SAP HANA database flushes all changed data from memory to the data volumes. 
+The data belonging to a savepoint represents a consistent state of the data on disk and remains so until the next savepoint operation has completed. 
+Redo log entries are written to the log volumes for all changes to persistent data. In the event of a database restart (for example, after a crash), 
+the data from the last completed savepoint can be read from the data volumes, and the redo log entries written to the log volumes since the last savepoint 
+can be replayed.
+
+
+Service	Note
+nameserver	Only the nameserver service in the system database on the active master host persists data. Slave namesever hosts communicate with the master, but do not persist data.
+indexserver	The indexserver service in tenant databases on all hosts except standby hosts persists data. This data volume can be partitioned to improve performance when reading and writing to this server.
+xsengine (if running as a separate service)	The xsengine service persists data on any host on which it is running.
+
+
+
+
+
+
+
+
+Hana cockpit issue:
+https://adilfahim.com/myblog/sap-hana-2-0-cockpit-installation-and-configuration/
+
+
+System DB: name server (index server integrated with name server)
+Tenet DB: index server and xs engine
+
+System DB : name server 3NN13
+Tenet DB :  index server 3nn15
+
+Row store  write optimizing
+Colum store read 
+
+if master down, automatically stand by will take 
+master+worker+---+worker    standby
+
+Vyshu1994
+Satya1971
+
+
+hdbsql: 
+SYSTEMDB :   hdbsql -i 90 -u SYSTEM -p Siva2000 -d SYSTEMDB -A  (or)  hdbsql -i 90 -u SYSTEM -d SYSTEMDB 
+TenetDB: hdbsql -i 90 -u SYSTEM -p Vyshu1994 -d HXE -A
+i - instance
+u username
+P password
+A - alignment
+\q quit
+-I input
+
+hdbsql -i 90 -u SYSTEM -p Vyshu1994 -d HXE -A 'select DATABASE_NAME from M_DATABASE' (with command)
+
+With script
+echo 'select DATABASE_NAME from M_DATABASE' > /tmp/dbcheck
+hdbsql -i 90 -u SYSTEM -p Vyshu1994 -d HXE -A -I /tmp/dbcheck
+
+SYSTEM DB
+Create user store key
+hdbuserstore -v set SYSTEM hxehost:39013@SYSTEMDB SYSTEM Satya1971
+hdbuserstore list
+hdbsql -U HAPSAPDBCTRL
+
+tenet DB
+hdbuserstore -v set TENDBKEY hxehost:39013@HXE SYSTEM Vyshu1994
+
+/usr/sap/HXE/home/.hdb/hxehost   (user key will store)
+DATA FILE       : /usr/sap/HXE/home/.hdb/hxehost/SSFS_HDB.DAT
+KEY FILE        : /usr/sap/HXE/home/.hdb/hxehost/SSFS_HDB.KEY
+
+cp -v folder.bck folder 
+-v - verbose
+
+cp -ap hxehost/ hxehost_5.32
+cp -v hxehost_5.32/* hxehost
+
+hdbsql SYSTEMDB=> \al
+Aligned output mode switched ON  (it will give structrive data)
+select * from M_DATABASES
+select DATABASE_NAME from M_DATABASE
+select SYSTEM_ID from M_DATABASE
+
+Database license
+SYstemDB --- properties- liensce
+Temperary licensce key -- 90days
+Permenent lisence key -- if expired , it will install automatcally temperary licensce for 28 days
+                         unenforced - if memory consumption exceeds the licensed amount of memory, system won't lock
+                         enforced -  if memory consumption exceeds the licensed amount of memory, systm will be lock and need to restart
+
+unenforced - SWPRODUCTNAME=SAP-HANA
+Enforced - SWPRODUCTNAME=SAP-HANA-ENF
+           SWPRODUCTNAME=SAP-HANA-DEV
+           SWPRODUCTNAME=SAP-HANA-DIGITAL
+
+LICENSE ADMIN privilige required to install licensce
+
+SELECT EXPIRATION_DATE,ENFORCED,PERMANENT,LOCKED_DOWN FROM "SYS"."M_LICENSE"; (enofrced=false thne it's unenforced)
+select * from SYS.M_LICENSE
+select * from SYS_DATABASES.M_LICENSE
+
+
+
+
+
+globalallocation limit
+Physical memory 16
+allocation limit 12
+
+top peak used memory from system restart
+select HOST, round(INSTANCE_TOTAL_MEMORY_PEAK_USED_SIZE/(1024*1024*1024), 2) as "Peak Used Memory GB" from M_HOST_RESOURCE_UTILIZATION;
+
+used memory:
+The total amount of memory used by SAP HANA is referred to as used memory. 
+It includes program code and stack, all data and system tables, and the memory required for temporary computations.
+
+Peak Used Memory:
+SAP HANA has a special used memory indicator called peak used memory. As the value for used memory is a current measurement, 
+peak used memory allows you to track the maximum value for used memory over time.
+
+Resident Memory:
+Resident memory is the real physical memory that processes utilize in the current state. 
+The resident physical memory is a pool of memory used, representing the SAP HANA, operating system, and other programs	.
+
+Total Resident is the total size of resident memory in the operating system, including other programs;
+
+
+users:
+select user_name from users;
+
+BACKUP user creantion SYSTEM DB:
+create user BACKUP password Backup2023 NO FORCE_FIRST_PASSWORD_CHANGE;
+alter user BACKUP disable password lifetime;
+grant BACKUP ADMIN to BACKUP;
+grant CATALOG READ to BACKUP;
+grant database backup admin to BACKUP;
+grant database recovery operator to BACKUP;
+database backup admin
+database recovery operator
+ 
+BACKUP user creantion TENET DB:
+create user BACKUP password Backup2022 NO FORCE_FIRST_PASSWORD_CHANGE;
+alter user BACKUP disable password lifetime;
+grant BACKUP ADMIN to BACKUP;
+grant CATALOG READ to BACKUP;
+
+grant sap.hana.admin.roles::Monitoring to XSA_ADMIN;
+sap.hana.admin.roles::Monitoring 
+
+
+select * from users where user_name='BACKUP';
+
+BACKUP user password checking:
+System DB: hdbsql -i 90 -u BACKUP -p Backup2023 -d SYSTEMDB "select DATABASE_NAME from M_DATABASE"
+TENET DB : hdbsql -i 90 -u BACKUP -p Backup2022 -d HXE "select DATABASE_NAME from M_DATABASE"
+
+Creating KEY for BACKUP user
+hdbuserstore set BACKUPSYSDB hxehost:39013@SYSTEMDB BACKUP Backup2023
+hdbuserstore set BACKUPTENDB hxehost:39013@HXE BACKUP Backup2022
+
+Text backup:
+hdbsql -U BACKUPSYSDB "backup data using file ('/tmp/backup/SYSTEMDB_$(date +%F_%H%M)/COMPLETE_DATA_BACKUP')"
+hdbsql -U BACKUPTENDB "backup data using file ('/tmp/backup/DB_HXE/SYSTEMDB_$(date +%F_%H%M)/COMPLETE_DATA_BACKUP')"
+
+
+Complete backup: A full backup is a type of data backup that involves copying all data in the SAP HANA database to a backup location. 
+                 This includes both the data and log volumes, as well as the configuration and system files.
+
+
+
+Delta backup : Delta backups in SAP HANA contain only the data that has been modified since the previous full data backup or the most recent delta backup.
+
+               Differential backup : A differential backup includes the data that has been modified since the previous full data backup.
+               Incremental backup : An incremental backup contains the data modified since the previous full data backup or the most recent delta backup.
+
+log backup: A log backup is a backup of the transaction log, which contains all the changes made to the database since the last backup. 
+This type of backup ensures that all transactions are captured in the backup and can be used for point-in-time recovery.
+ 
+
+
+Recover:
+most recent state
+point in time
+specfic data backup
+
+/tmp/backup/DB_HXE
+COMPLETE_DATA_BACKUP_databackup_2_1
+
+HDBLCM:installtion media   
+install SAPHANA/components
+updates SAP HANA.compnents
+
+HDBLCM: resident   /hana/shared/SID/hdblcm
+ADD/remove host roles
+ADD hosts to the hana databse
+configure inter-service connection
+configure SLD
+convert to MDC
+rename the SAP hana daabase
+uninstall HANA
+unregister hana
+install or update additional components
+
+
+Upgrade:
+
+./SAPCAR_1200-70007716.EXE -xvf IMDB_SERVER20_067_3-80002031.SAR -manifest SIGNATURE.SMF
+hdblcm –ignore=check_signature_file
+
+
+XSA installtion: https://blogs.sap.com/2018/01/23/sap-hana-2.0-xs-advanced-installation-by-the-sap-hana-academy/
+XSA_ADMIN user will create
+
+XS advanced run time + xs components
+./xs api https://hxehost:39030
+
+./xs api https://hxehost:39030 --cacert /hana/shared/HXE/xs/controller_data/controller/ssl-pub/router/default.root.crt.pem
+
+./xs api https://hxehost:39030 --skip-ssl-validation
+
+/hana/shared/HXE/xs> xs version  (to check alla url)
+
+deploy-service                    = https://119.235.49.190:51004
+product-installer                 = https://119.235.49.190:51005
+di-space-enablement-ui            = https://119.235.49.190:51025
+webide                            = https://119.235.49.190:53075
+job-scheduler-service-dashboard   = https://119.235.49.190:51033
+xsa-cockpit                       = https://119.235.49.190:51036
+hana-cockpit                      = https://119.235.49.190:51044
+hana-cockpit-admin                = https://119.235.49.190:51046
+
+
+
+XSA list-tenants (we know installed xsa DB's)
+xs login –o ORG –s development
+
+https://blogs.sap.com/2021/05/12/refreshing-hana-systems-involving-xsa-tenants/
+
+
+xs version
+xs-admin-login
+xs apps
+xs spaces
+xs l
+xs a
+
+hana cokpit manger : registering DBs,creating DB groups,creating users,user groups 
+username: cockpit_Admin
+password
+
+1. create users: if reuqired diffent users for different systems
+2. create group - group name - database[*] - 
+3. registerd database  - connection 
+
+SYSTEMDB
+COCKPIT_TECH_USER
+Vyshu@1994
+
+TENET DB
+COCKPIT_TECH_USER
+Vyshu@1994
+
+Vyshu1994
+
+hana cockpit: monitoring & adminstartion of registerd db's
+user name: cockpit_Admin
+Password: 
+
+
+
+
+
+
+
+
+
+                        
+
+
+how many nodes can we add?
+How much maximum memory can we allocate on node?
+How much maximum data file can create, if it's reached will it crash the indexserver? 
+16 TB  - EXT3
+datavolume_striping=true
+datavolume_striping_size_gb = 15000
+
+large instance: https://learn.microsoft.com/en-us/azure/sap/large-instances/hana-example-installation
+
+
+How to restrict maximum data file size ?
+
+Scal up : add resourses to existing host
+Scale out : add resourrses with adding hosts
+
+
+While doing upgarde how to do on multi host?
+Hana backups scheduling
+
+
+
+Blogs:
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_sap_solutions/9/html/configuring_sap_hana_scale-up_multitarget_system_replication_for_disaster_recovery/asmb_useful_commands_configuring-hana-scale-up-multitarget-system-replication-disaster-recovery
+
+
+Complete backup overwriting
+
+15 min log backup only writing the storage path
+A:  basepath_catalogbackup parmeter changed to our storage location issue fixed.  /tmp/backup/log
+
+
+/hana/log volume full situation
+
+https://myhanadbtips.wordpress.com/2021/07/26/hana-log-is-100-full-in-sap-hana/
+ln -s /hana/shared/log/HXE/Temperory_logs/mnt00001/hdb00001 /hana/shared/log/HXE/mnt00001/hdb00001
+ln -s /hana/shared/log/HXE/Temperory_logs/mnt00001/hdb00002.00003 /hana/shared/log/HXE/mnt00001/hdb00002.00003
+ALTER SYSTEM RECLAIM LOG;
+
+We have faced issue with while starting DB coruption or missing of nameserver.ini. 
+Landscape id missed id = e4e9b11a-6a57-b34f-a66a-60bcb5089fd5 
+https://techrelam.blogspot.com/2020/02/hdbdaemon-hdb-daemon-not-running-due-to.html
+
+XSA restart
+
+Let's start by checking whether the XS Engine is running on your SAP HANA instance.
+Open up a browser and point it to the address http://<server>:80<instance>
+
+How to restart manually services?
+During initial analysis, administrator can try restarting nameserver and indexserver manually by executing ./hdbnameserver and ./hdbindexserver 
+from exe directory in the sequence to see if these are starting successfully.
+In such case, issue could be with the daemon. Then admin can look further into the daemon trace file to find the possible issue. 
+
+
+SAP hana startup sequence:
+When starting SAP HANA, as a very first step, the daemon service is started.
+The daemon is a lightweight service that sets the environment variables required by the remaining services (nameserver, indexserver, scriptserver, xsengine, …) and then starts them in the correct order.
+
+
+
+
+find . -name hxe_upgrade.sh 
+
+Tenet creation: https://www.syedhussim.com/hana-db/create-a-tenant-database.html 
+CREATE DATABASE DB1 SYSTEM USER PASSWORD "your password"
+SELECT * FROM SYS.M_DATABASES
+
+
+
+HANA Cockpit: installting XS advanced runtime + XS runtime
+
+hdblcm.sh
+cockpit_admin  (xsa admin user)
+SYS_XS_RUNTIME
+
+
+Hana client:
+ABAP: /usr/sap/SID/hdbclient
+
+hana: /hana/shared/HDQ/hdbclient
+
+
+pending:
+hana studio - backup,catlog,content,security,provisionig
+Backup: create, manage, and schedule backups
+catlog: database schemas, tables, views, and procedures. It's a valuable tool for database administrators and developers to explore and manage database objects.
+Content : The Content perspective is often used by developers to work with design-time artifacts such as information models, calculation views, and database procedures. 
+          It allows you to design and manipulate data models.
+Security: can manage database users, roles, and privileges from the Security perspective. 
+          It's essential for defining and maintaining security in your SAP HANA system. audit purpouse
+Provisining: SAP HANA Live provides real-time analytics for specific business applications.
+
+
+
+hana monitoring, overview,landscape,alerts,perfomence,volvmes,configuration,system information,diagnosis files,trace configuration,
+
+Overview: The Overview perspective provides a high-level summary of the SAP HANA system's health, resource consumption, and recent activities.
+          It's useful for a quick system health check.
+
+Landscape: The Landscape tab in the Monitoring perspective provides an overview of the entire SAP HANA landscape. 
+           It allows you to view and manage multiple HANA systems and their statuses. System replication,services,Hosts
+Alerts : This tab displays alerts and notifications related to system health, performance, and configuration.
+         You can set up alert rules to trigger notifications based on specific conditions.
+
+Perfomence: The Performance tab offers real-time and historical performance monitoring.
+            You can analyze the system's resource utilization, query performance, and more.
+Volume: he Volumes tab provides information about data and log volumes, including their sizes, locations, and storage utilization.
+
+Configuration: The Configuration tab allows you to view and manage system configuration settings. 
+                This includes database parameters and settings for various components of the HANA system.
+
+System Information: You can access detailed information about the system configuration, version, and resource utilization from the System Information tab.
+Diagnosis files: The Diagnosis Files tab provides access to log and trace files, 
+                 which are crucial for diagnosing and troubleshooting issues within the system.
+
+Tace configuration: can configure and manage trace files to collect detailed information for debugging and performance analysis.
+                    Databas trace,sQL trace,user specfic trace,Perfomence trace,END to end trace,Expensive statment trace,kernel profiler,Plan trace
+
+
+If any user have user admin role we can change the SYSTM user password for SYSTEMDB 
+SQL conslole -- ALTER USER SYSTEM PASSWORD Vyshu1994
+
+SYstem user password change (emergency time to change SYSTEMDB user(SYSTEM) PASSWORD)
+You need to reset SYSTEM user password and do not have any other user with system privilege USER ADMIN role assigned.
+1. stop DB
+2. /usr/sap/HXE/HDB90/hdbenv.sh  (set envionment varibles)
+3. /usr/sap/HXE/HDB90/exe/hdbnameserver -resetUserSystem
+     Vyshu2000
+     Siva2000
+     Satya1971  (password characters lenth not matched - * 10: authentication failed SQLSTATE: 28000, invalid usernam & Password)
+
+SYSTEM DB:Geeta2020
+TENET DB: Geeta2022
+4. Start DB
+
+to update hdbuserstore
+hdbuserstore set SYSTEM hxehost:39013@SYSTEMDB SYSTEM Geeta2020
+
+Tenet DB SYSTEM password reset:
+ALTER SYSTEM STOP DATABASE HXE
+ALTER DATABASE HXE SYSTEM USER PASSWORD Geeta2020
+ALTER SYSTEM START DATABASE HXE
+
+parameters:
+1.minimal_password_length
+2.force_first_password_change = true (not required to change intial password)
+3.last_used_passwords 
+4.maximum_invalid_connect_attempts 6
+
+saprouter -r -K "p:CN=SAP_ROUTER_NAT, OU=0000837661, OU=SAProuter, O=SAP, C=DE"
+
+data'log volume encryption
+backup recovery procedure on differnt systems
+high availblity
+SSL
+SLD
+SDA
+SDI
+SLT
+Hana cokpit
+Hana client
+Hana studio
+Alert setup configuration
+Audit setup configuration
+security
+perfomence tab in monitoring
+Delta merge
+XSA
+Recovery doubts
+trace
+
+Encryption:
+https://blogs.sap.com/2022/11/18/sap-hana-database-encryption/
+
+1. hana stop
+
+
+
+
+
+
+SSL certficates: 
+https://ssl-tools.net/certificates
+
+
+
+
+DB: SLES 15 SP3 for SAP
+
+
+
+
+
+
+
+
+
+
